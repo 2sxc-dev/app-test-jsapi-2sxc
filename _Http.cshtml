@@ -49,9 +49,11 @@
 <script>
     function httpTest(context, action) {
         const table = '@table';
+        const simpleUrl = `app/auto/content/${table}`;
         const controller = $2sxc(context);
-        const headers = controller.webApi2.headers();
-        const contentUrl = controller.webApi2.url(`app/auto/content/${table}`);
+        const webApi = controller.webApi;
+        const headers = webApi.headers();
+        const contentUrl = webApi.url(simpleUrl);
         const reqData = {
             FirstName: 'FirstName',
             LastName: 'LastName',
@@ -69,6 +71,32 @@
 
         switch (action) {
             /* FETCH */
+            case 'FETCH_GET_CONTENT_12_QUICK':
+                // fetchJson would already do the response.json() ?
+                // webApi.fetchJson(simpleUrl)
+                webApi.fetch(simpleUrl)
+                // Would replace
+                // fetch(contentUrl, {
+                //    headers: {
+                //        ...headers,
+                //        'Accept': 'application/json',
+                //    },
+                //    method: 'GET',
+                //})
+                    .then(response => response.json())
+                    .then(data => console.log(action, data));
+                break;
+            case 'FETCH_GET_CONTENT_12_MANUAL':
+                fetch(contentUrl, {
+                    headers: {
+                        ...webApi.headers("GET"),
+//                        'Accept': 'application/json',
+                    },
+                    method: 'GET',
+                })
+                    .then(response => response.json())
+                    .then(data => console.log(action, data));
+                break;
             case 'FETCH_GET_CONTENT':
                 fetch(contentUrl, {
                     headers: {
@@ -77,6 +105,20 @@
                     },
                     method: 'GET',
                 })
+                    .then(response => response.json())
+                    .then(data => console.log(action, data));
+                break;
+            case 'FETCH_POST_CONTENT_12_QUICK':
+                webApi.fetch(simpleUrl, JSON.stringify(reqData)) // any not-null data would result in post (null would also post)
+                // fetch(contentUrl, {
+                //    headers: {
+                //        ...headers,
+                //        'Accept': 'application/json',
+                //        'Content-Type': 'application/json',
+                //    },
+                //    method: 'POST',
+                //    body: JSON.stringify(reqData),
+                // })
                     .then(response => response.json())
                     .then(data => console.log(action, data));
                 break;
@@ -92,6 +134,13 @@
                 })
                     .then(response => response.json())
                     .then(data => console.log(action, data));
+                break;
+            case 'FETCH_DELETE_CONTENT_12_QUICK':
+                // fetchJson would already do the response.json() ?
+                webApi.fetchJson(simpleUrl)
+                    // .then(response => response.json())
+                    .then(data => webApi.fetch(`${simpleUrl}?id=${data[data.length - 1].Id}`, null, "DELETE"))
+                    .then(() => console.log(action));
                 break;
             case 'FETCH_DELETE_CONTENT':
                 fetch(contentUrl, {
@@ -228,6 +277,35 @@
                 break;
 
             /* XHR */
+            case 'XHR_GET_CONTENT_12_MANUAL':
+                const xhrGetM = new XMLHttpRequest();
+                xhrGetM.open('GET', contentUrl);
+                // Idea is to remove one line for the json
+                Object.entries(webApi.headers("GET" /*, "json" */)) // json would be optional, as soon as you specify a verb
+                  .forEach(entry => xhrGetM.setRequestHeader(entry[0], entry[1]));
+                // xhrGet.setRequestHeader('Accept', 'application/json');
+                xhrGetM.onreadystatechange = event => {
+                    if (xhrGet.readyState === XMLHttpRequest.DONE) {
+                        console.log(action, JSON.parse(xhrGet.responseText));
+                    }
+                }
+                xhrGet.send();
+                break;
+            case 'XHR_GET_CONTENT_12_QUICK':
+                // this is dummy code by 2dm to show how it would be nicer
+                const xhrGetQ = webApi.xhr("get", simpleUrl);
+                // replaces this:
+                // const xhrGetQ = new XMLHttpRequest();
+                // xhrGet.open('GET', contentUrl);
+                // Object.entries(headers).forEach(entry => xhrGet.setRequestHeader(entry[0], entry[1]));
+                // xhrGet.setRequestHeader('Accept', 'application/json');
+                xhrGetQ.onreadystatechange = event => {
+                    if (xhrGet.readyState === XMLHttpRequest.DONE) {
+                        console.log(action, JSON.parse(xhrGet.responseText));
+                    }
+                }
+                xhrGetQ.send();
+                break;
             case 'XHR_GET_CONTENT':
                 const xhrGet = new XMLHttpRequest();
                 xhrGet.onreadystatechange = event => {
