@@ -114,8 +114,21 @@
                     .then(response => response.json())
                     .then(data => console.log(action, data));
                 break;
+            case 'FETCH_POST_CONTENT_12_GETLIST':
+                // controller.data.get()
+                webApi.data("typeName")
+                    .then(data => console.log(action, data));
+                webApi.getData("typeName", 27)
+                    .then(data => console.log(action, data));
+                webApi.createData("typeName", 27)
+                    .then(data => console.log(action, data));
+                webApi.deleteData("typeName", 27)
+                    .then(data => console.log(action, data));
+                webApi.api("endpoint", "optionaldata", "optional-VERB")
+                webApi.query("name", "optionaldata", "optional-VERB")
+                break;
             case 'FETCH_POST_CONTENT_12_QUICK':
-                webApi.fetch(simpleUrl, JSON.stringify(reqData)) // any not-null data would result in post (null would also post)
+                webApi.fetch(simpleUrl, reqData) // any not-null data would result in post (null would also post)
                 // fetch(contentUrl, {
                 //    headers: {
                 //        ...headers,
@@ -296,21 +309,6 @@
                     }
                 }
                 xhrGet.send();
-                break;
-            case 'XHR_GET_CONTENT_12_QUICK':
-                // this is dummy code by 2dm to show how it would be nicer
-                const xhrGetQ = webApi.xhr("get", simpleUrl);
-                // replaces this:
-                // const xhrGetQ = new XMLHttpRequest();
-                // xhrGet.open('GET', contentUrl);
-                // Object.entries(headers).forEach(entry => xhrGet.setRequestHeader(entry[0], entry[1]));
-                // xhrGet.setRequestHeader('Accept', 'application/json');
-                xhrGetQ.onreadystatechange = event => {
-                    if (xhrGet.readyState === XMLHttpRequest.DONE) {
-                        console.log(action, JSON.parse(xhrGet.responseText));
-                    }
-                }
-                xhrGetQ.send();
                 break;
             case 'XHR_GET_CONTENT':
                 const xhrGet = new XMLHttpRequest();
