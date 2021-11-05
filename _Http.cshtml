@@ -11,26 +11,35 @@
 @{
     string table = "Table1";
     List<string[]> list = new List<string[]>() {
+        new string[] { "New v12 fetch" },
+        new string[] { "FETCH_GET_CONTENT_QUICK", "Fetch Get Content Quick " + table },
+        new string[] { "FETCH_GET_CONTENT_JSON", "Fetch Get Content Quick JSON " + table },
+
+        new string[] { "Standard fetch" },
         new string[] { "FETCH_GET_CONTENT", "Fetch Get Content " + table },
         new string[] { "FETCH_POST_CONTENT", "Fetch Post Content " + table },
         new string[] { "FETCH_DELETE_CONTENT", "Fetch Delete Content " + table },
         new string[] { "FETCH_ERROR_CONTENT", "Fetch Error Content " + table },
 
+        new string[] { "Axios" },
         new string[] { "AXIOS_GET_CONTENT", "Axios Get Content " + table },
         new string[] { "AXIOS_POST_CONTENT", "Axios Post Content " + table },
         new string[] { "AXIOS_DELETE_CONTENT", "Axios Delete Content " + table },
         new string[] { "AXIOS_ERROR_CONTENT", "Axios Error Content " + table },
 
+        new string[] { "jQuery" },
         new string[] { "JQUERY_GET_CONTENT", "JQuery Get Content " + table },
         new string[] { "JQUERY_POST_CONTENT", "JQuery Post Content " + table },
         new string[] { "JQUERY_DELETE_CONTENT", "JQuery Delete Content " + table },
         new string[] { "JQUERY_ERROR_CONTENT", "JQuery Error Content " + table },
 
+        new string[] { "SuperAgent" },
         new string[] { "SUPERAGENT_GET_CONTENT", "SuperAgent Get Content " + table },
         new string[] { "SUPERAGENT_POST_CONTENT", "SuperAgent Post Content " + table },
         new string[] { "SUPERAGENT_DELETE_CONTENT", "SuperAgent Delete Content " + table },
         new string[] { "SUPERAGENT_ERROR_CONTENT", "SuperAgent Error Content " + table },
 
+        new string[] { "Xhr" },
         new string[] { "XHR_GET_CONTENT", "XHR Get Content " + table },
         new string[] { "XHR_POST_CONTENT", "XHR Post Content " + table },
         new string[] { "XHR_DELETE_CONTENT", "XHR Delete Content " + table },
@@ -38,11 +47,15 @@
     };
 }
 
-<hr />
 
 @foreach (string[] item in list.ToArray())
 {
+  if (item.Length == 1) {
+    <hr>
+    <h2>@item[0]</h2>
+  } else {
     <button type="button" onclick="httpTest(this, '@item[0]')">@item[1]</button><br /><br />
+  }
 }
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.22.0/axios.min.js"
@@ -76,38 +89,25 @@
         */
 
         switch (action) {
-            /* FETCH */
-            case 'FETCH_GET_CONTENT_12_QUICK':
-                // fetchJson would already do the response.json() ?
-                // webApi.fetchJson(simpleUrl)
+            /* webApi FETCH New */
+            case 'FETCH_GET_CONTENT_QUICK':
                 webApi.fetch(simpleUrl)
-                // Would replace
-                // fetch(contentUrl, {
-                //    headers: {
-                //        ...headers,
-                //        'Accept': 'application/json',
-                //    },
-                //    method: 'GET',
-                //})
                     .then(response => response.json())
                     .then(data => console.log(action, data));
                 break;
-            case 'FETCH_GET_CONTENT_12_MANUAL':
-                fetch(contentUrl, {
-                    headers: {
-                        ...webApi.headers("GET"),
-//                        'Accept': 'application/json',
-                    },
-                    method: 'GET',
-                })
-                    .then(response => response.json())
+            case 'FETCH_GET_CONTENT_JSON':
+                webApi.fetchJson(simpleUrl)
                     .then(data => console.log(action, data));
                 break;
+
+
+
+            /* FETCH Standard */
             case 'FETCH_GET_CONTENT':
                 fetch(contentUrl, {
                     headers: {
-                        ...headers,
-                        'Accept': 'application/json',
+                        ...webApi.headers("GET"),
+                        // 'Accept': 'application/json',
                     },
                     method: 'GET',
                 })
@@ -127,7 +127,7 @@
                 webApi.api("endpoint", "optionaldata", "optional-VERB")
                 webApi.query("name", "optionaldata", "optional-VERB")
                 break;
-            case 'FETCH_POST_CONTENT_12_QUICK':
+            case 'FETCH_POST_CONTENT_QUICK':
                 webApi.fetch(simpleUrl, reqData) // any not-null data would result in post (null would also post)
                 // fetch(contentUrl, {
                 //    headers: {
@@ -264,8 +264,8 @@
             case 'SUPERAGENT_GET_CONTENT':
                 superagent
                     .get(contentUrl)
-                    .set(headers)
-                    .set('Accept', 'application/json')
+                    .set(webApi.headers("GET"))
+                    //.set('Accept', 'application/json')
                     .then(response => console.log(action, response));
                 break;
             case 'SUPERAGENT_POST_CONTENT':
@@ -296,20 +296,6 @@
                 break;
 
             /* XHR */
-            case 'XHR_GET_CONTENT_12_MANUAL':
-                const xhrGetM = new XMLHttpRequest();
-                xhrGetM.open('GET', contentUrl);
-                // Idea is to remove one line for the json
-                Object.entries(webApi.headers("GET" /*, "json" */)) // json would be optional, as soon as you specify a verb
-                  .forEach(entry => xhrGetM.setRequestHeader(entry[0], entry[1]));
-                // xhrGet.setRequestHeader('Accept', 'application/json');
-                xhrGetM.onreadystatechange = event => {
-                    if (xhrGet.readyState === XMLHttpRequest.DONE) {
-                        console.log(action, JSON.parse(xhrGet.responseText));
-                    }
-                }
-                xhrGet.send();
-                break;
             case 'XHR_GET_CONTENT':
                 const xhrGet = new XMLHttpRequest();
                 xhrGet.onreadystatechange = event => {
@@ -318,8 +304,8 @@
                     }
                 }
                 xhrGet.open('GET', contentUrl);
-                Object.entries(headers).forEach(entry => xhrGet.setRequestHeader(entry[0], entry[1]));
-                xhrGet.setRequestHeader('Accept', 'application/json');
+                Object.entries(webApi.headers("GET")).forEach(entry => xhrGet.setRequestHeader(entry[0], entry[1]));
+                // xhrGet.setRequestHeader('Accept', 'application/json');
                 xhrGet.send();
                 break;
             case 'XHR_POST_CONTENT':
@@ -330,9 +316,9 @@
                     }
                 }
                 xhrPost.open('POST', contentUrl);
-                Object.entries(headers).forEach(entry => xhrPost.setRequestHeader(entry[0], entry[1]));
-                xhrPost.setRequestHeader('Accept', 'application/json');
-                xhrPost.setRequestHeader('Content-Type', 'application/json');
+                Object.entries(webApi.headers("post")).forEach(entry => xhrPost.setRequestHeader(entry[0], entry[1]));
+                // xhrPost.setRequestHeader('Accept', 'application/json');
+                // xhrPost.setRequestHeader('Content-Type', 'application/json');
                 xhrPost.send(JSON.stringify(reqData));
                 break;
             case 'XHR_DELETE_CONTENT':
