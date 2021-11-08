@@ -13,7 +13,10 @@
     List<string[]> list = new List<string[]>() {
         new string[] { "New v12 fetch" },
         new string[] { "FETCH_GET_CONTENT_QUICK", "Fetch Get Content Quick " + table },
-        new string[] { "FETCH_GET_CONTENT_JSON", "Fetch Get Content Quick JSON " + table },
+        new string[] { "FETCH_GET_CONTENT_QUICK_JSON", "Fetch Get Content Quick JSON " + table },
+        new string[] { "FETCH_POST_CONTENT_QUICK", "Fetch Post Content Quick " + table },
+        new string[] { "FETCH_POST_CONTENT_QUICK_JSON", "Fetch Post Content Quick JSON " + table },
+        new string[] { "FETCH_DELETE_CONTENT_QUICK", "Fetch Delete Content Quick " + table },
 
         new string[] { "Standard fetch" },
         new string[] { "FETCH_GET_CONTENT", "Fetch Get Content " + table },
@@ -39,7 +42,7 @@
         new string[] { "SUPERAGENT_DELETE_CONTENT", "SuperAgent Delete Content " + table },
         new string[] { "SUPERAGENT_ERROR_CONTENT", "SuperAgent Error Content " + table },
 
-        new string[] { "Xhr" },
+        new string[] { "XHR" },
         new string[] { "XHR_GET_CONTENT", "XHR Get Content " + table },
         new string[] { "XHR_POST_CONTENT", "XHR Post Content " + table },
         new string[] { "XHR_DELETE_CONTENT", "XHR Delete Content " + table },
@@ -71,8 +74,6 @@
         const simpleUrl = `app/auto/content/${table}`;
         const controller = $2sxc(context);
         const webApi = controller.webApi;
-        const headers = webApi.headers();
-        const contentUrl = webApi.url(simpleUrl);
         const reqData = {
             FirstName: 'FirstName',
             LastName: 'LastName',
@@ -95,27 +96,27 @@
                     .then(response => response.json())
                     .then(data => console.log(action, data));
                 break;
-            case 'FETCH_GET_CONTENT_JSON':
+            case 'FETCH_GET_CONTENT_QUICK_JSON':
                 webApi.fetchJson(simpleUrl)
                     .then(data => console.log(action, data));
                 break;
-
-
-
-            /* FETCH Standard */
-            case 'FETCH_GET_CONTENT':
-                fetch(contentUrl, {
-                    headers: {
-                        ...webApi.headers("GET"),
-                        // 'Accept': 'application/json',
-                    },
-                    method: 'GET',
-                })
+            case 'FETCH_POST_CONTENT_QUICK':
+                webApi.fetch(simpleUrl, reqData) // any not-null data would result in post (null would also post)
                     .then(response => response.json())
                     .then(data => console.log(action, data));
                 break;
+            case 'FETCH_POST_CONTENT_QUICK_JSON':
+                webApi.fetchJson(simpleUrl, reqData)
+                    .then(data => console.log(action, data));
+                break;
+            case 'FETCH_DELETE_CONTENT_QUICK':
+                webApi.fetchJson(simpleUrl)
+                    .then(data => webApi.fetch(`${simpleUrl}?id=${data[data.length - 1].Id}`, null, 'DELETE'))
+                    .then(() => console.log(action));
+                break;
+
+            /* WIP */
             case 'FETCH_POST_CONTENT_12_GETLIST':
-                // controller.data.get()
                 webApi.data("typeName")
                     .then(data => console.log(action, data));
                 webApi.getData("typeName", 27)
@@ -127,135 +128,121 @@
                 webApi.api("endpoint", "optionaldata", "optional-VERB")
                 webApi.query("name", "optionaldata", "optional-VERB")
                 break;
-            case 'FETCH_POST_CONTENT_QUICK':
-                webApi.fetch(simpleUrl, reqData) // any not-null data would result in post (null would also post)
-                // fetch(contentUrl, {
-                //    headers: {
-                //        ...headers,
-                //        'Accept': 'application/json',
-                //        'Content-Type': 'application/json',
-                //    },
-                //    method: 'POST',
-                //    body: JSON.stringify(reqData),
-                // })
+
+            /* FETCH Standard */
+            case 'FETCH_GET_CONTENT':
+                fetch(webApi.url(simpleUrl), {
+                    headers: webApi.headers('GET'),
+                })
                     .then(response => response.json())
                     .then(data => console.log(action, data));
                 break;
             case 'FETCH_POST_CONTENT':
-                fetch(contentUrl, {
-                    headers: {
-                        ...headers,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json',
-                    },
+                fetch(webApi.url(simpleUrl), {
                     method: 'POST',
+                    headers: webApi.headers('POST'),
                     body: JSON.stringify(reqData),
                 })
                     .then(response => response.json())
                     .then(data => console.log(action, data));
                 break;
-            case 'FETCH_DELETE_CONTENT_12_QUICK':
-                // fetchJson would already do the response.json() ?
-                webApi.fetchJson(simpleUrl)
-                    // .then(response => response.json())
-                    .then(data => webApi.fetch(`${simpleUrl}?id=${data[data.length - 1].Id}`, null, "DELETE"))
-                    .then(() => console.log(action));
-                break;
             case 'FETCH_DELETE_CONTENT':
-                fetch(contentUrl, {
-                    headers: {
-                        ...headers,
-                        'Accept': 'application/json',
-                    },
-                    method: 'GET',
+                fetch(webApi.url(simpleUrl), {
+                    headers: webApi.headers('GET'),
                 })
                     .then(response => response.json())
-                    .then(data =>
-                        fetch(`${contentUrl}?id=${data[data.length - 1].Id}`, {
-                            headers,
+                    .then(
+                        data => fetch(`${webApi.url(simpleUrl)}?id=${data[data.length - 1].Id}`, {
                             method: 'DELETE',
+                            headers: webApi.headers('DELETE'),
                         }),
                     )
                     .then(() => console.log(action));
                 break;
             case 'FETCH_ERROR_CONTENT':
-                fetch(`${contentUrl}?id=undefined`, {
-                    headers,
+                fetch(`${webApi.url(simpleUrl)}?id=undefined`, {
                     method: 'DELETE',
+                    headers: webApi.headers('DELETE'),
                 })
                     .then(() => console.log(action));
                 break;
 
             /* AXIOS */
             case 'AXIOS_GET_CONTENT':
-                axios.get(contentUrl, {
-                    headers,
+                axios({
+                    url: webApi.url(simpleUrl),
+                    headers: webApi.headers('GET'),
                 })
                     .then(response => console.log(action, response));
                 break;
             case 'AXIOS_POST_CONTENT':
-                axios.post(
-                    contentUrl,
-                    reqData,
-                    {
-                        headers,
-                    }
-                )
+                axios({
+                    method: 'POST',
+                    url: webApi.url(simpleUrl),
+                    headers: webApi.headers('POST'),
+                    data: reqData,
+                })
                     .then(response => console.log(action, response));
                 break;
             case 'AXIOS_DELETE_CONTENT':
-                axios.get(contentUrl, {
-                    headers,
+                axios({
+                    url: webApi.url(simpleUrl),
+                    headers: webApi.headers('GET'),
                 })
-                    .then(response =>
-                        axios.delete(`${contentUrl}?id=${response.data[response.data.length - 1].Id}`, {
-                            headers,
+                    .then(
+                        response => axios({
+                            method: 'DELETE',
+                            url: `${webApi.url(simpleUrl)}?id=${response.data[response.data.length - 1].Id}`,
+                            headers: webApi.headers('DELETE'),
                         }),
                     )
                     .then(() => console.log(action));
                 break;
             case 'AXIOS_ERROR_CONTENT':
-                axios.delete(`${contentUrl}?id=undefined`, {
-                    headers,
+                axios({
+                    method: 'DELETE',
+                    url: `${webApi.url(simpleUrl)}?id=undefined`,
+                    headers: webApi.headers('DELETE'), 
                 })
                     .then(() => console.log(action));
                 break;
 
             /* JQUERY */
             case 'JQUERY_GET_CONTENT':
-                $.ajax(contentUrl, {
-                    headers,
-                    dataType: 'json',
+                $.ajax({
+                    url: webApi.url(simpleUrl),
+                    headers: webApi.headers('GET'), 
                 })
                     .then(data => console.log(action, data));
                 break;
             case 'JQUERY_POST_CONTENT':
-                $.ajax(contentUrl, {
-                    headers,
+                $.ajax({
                     method: 'POST',
-                    contentType: 'application/json',
-                    dataType: 'json',
+                    url: webApi.url(simpleUrl),
+                    headers: webApi.headers('POST'),
                     data: JSON.stringify(reqData),
                 })
                     .then(data => console.log(action, data));
                 break;
             case 'JQUERY_DELETE_CONTENT':
-                $.ajax(contentUrl, {
-                    headers,
-                    dataType: 'json',
+                $.ajax({
+                    url: webApi.url(simpleUrl),
+                    headers: webApi.headers('GET'), 
                 })
-                    .then(data =>
-                        $.ajax(`${contentUrl}?id=${data[data.length - 1].Id}`, {
-                            headers,
+                    .then(
+                        data => $.ajax({
                             method: 'DELETE',
+                            url: `${webApi.url(simpleUrl)}?id=${data[data.length - 1].Id}`,
+                            headers: webApi.headers('DELETE'),
                         }),
                     )
                     .then(() => console.log(action));
                 break;
             case 'JQUERY_ERROR_CONTENT':
-                $.ajax(`${contentUrl}?id=undefined`, {
-                    headers,
+                $.ajax({
                     method: 'DELETE',
+                    url: `${webApi.url(simpleUrl)}?id=undefined`,
+                    headers: webApi.headers('DELETE'),
                 })
                     .then(() => console.log(action));
                 break;
@@ -263,35 +250,32 @@
             /* SUPERAGENT */
             case 'SUPERAGENT_GET_CONTENT':
                 superagent
-                    .get(contentUrl)
-                    .set(webApi.headers("GET"))
-                    //.set('Accept', 'application/json')
+                    .get(webApi.url(simpleUrl))
+                    .set(webApi.headers('GET'))
                     .then(response => console.log(action, response));
                 break;
             case 'SUPERAGENT_POST_CONTENT':
                 superagent
-                    .post(contentUrl)
-                    .set(headers)
-                    .set('Accept', 'application/json')
+                    .post(webApi.url(simpleUrl))
+                    .set(webApi.headers('POST'))
                     .send(reqData)
                     .then(response => console.log(action, response));
                 break;
             case 'SUPERAGENT_DELETE_CONTENT':
                 superagent
-                    .get(contentUrl)
-                    .set(headers)
-                    .set('Accept', 'application/json')
+                    .get(webApi.url(simpleUrl))
+                    .set(webApi.headers('GET'))
                     .then(
                         response => superagent
-                            .delete(`${contentUrl}?id=${response.body[response.body.length - 1].Id}`)
-                            .set(headers)
+                            .delete(`${webApi.url(simpleUrl)}?id=${response.body[response.body.length - 1].Id}`)
+                            .set(webApi.headers('DELETE'))
                     )
                     .then(() => console.log(action));
                 break;
             case 'SUPERAGENT_ERROR_CONTENT':
                 superagent
-                    .delete(`${contentUrl}?id=undefined`)
-                    .set(headers)
+                    .delete(`${webApi.url(simpleUrl)}?id=undefined`)
+                    .set(webApi.headers('DELETE'))
                     .then(() => console.log(action));
                 break;
 
@@ -303,9 +287,8 @@
                         console.log(action, JSON.parse(xhrGet.responseText));
                     }
                 }
-                xhrGet.open('GET', contentUrl);
-                Object.entries(webApi.headers("GET")).forEach(entry => xhrGet.setRequestHeader(entry[0], entry[1]));
-                // xhrGet.setRequestHeader('Accept', 'application/json');
+                xhrGet.open('GET', webApi.url(simpleUrl));
+                Object.entries(webApi.headers('GET')).forEach(entry => xhrGet.setRequestHeader(entry[0], entry[1]));
                 xhrGet.send();
                 break;
             case 'XHR_POST_CONTENT':
@@ -315,10 +298,8 @@
                         console.log(action, JSON.parse(xhrPost.responseText));
                     }
                 }
-                xhrPost.open('POST', contentUrl);
-                Object.entries(webApi.headers("post")).forEach(entry => xhrPost.setRequestHeader(entry[0], entry[1]));
-                // xhrPost.setRequestHeader('Accept', 'application/json');
-                // xhrPost.setRequestHeader('Content-Type', 'application/json');
+                xhrPost.open('POST', webApi.url(simpleUrl));
+                Object.entries(webApi.headers('POST')).forEach(entry => xhrPost.setRequestHeader(entry[0], entry[1]));
                 xhrPost.send(JSON.stringify(reqData));
                 break;
             case 'XHR_DELETE_CONTENT':
@@ -332,14 +313,13 @@
                                 console.log(action);
                             }
                         }
-                        xhrDelete.open('DELETE', `${contentUrl}?id=${data[data.length - 1].Id}`);
-                        Object.entries(headers).forEach(entry => xhrDelete.setRequestHeader(entry[0], entry[1]));
+                        xhrDelete.open('DELETE', `${webApi.url(simpleUrl)}?id=${data[data.length - 1].Id}`);
+                        Object.entries(webApi.headers('DELETE')).forEach(entry => xhrDelete.setRequestHeader(entry[0], entry[1]));
                         xhrDelete.send();
                     }
                 }
-                xhrGetForDelete.open('GET', contentUrl);
-                Object.entries(headers).forEach(entry => xhrGetForDelete.setRequestHeader(entry[0], entry[1]));
-                xhrGetForDelete.setRequestHeader('Accept', 'application/json');
+                xhrGetForDelete.open('GET', webApi.url(simpleUrl));
+                Object.entries(webApi.headers('GET')).forEach(entry => xhrGetForDelete.setRequestHeader(entry[0], entry[1]));
                 xhrGetForDelete.send();
                 break;
             case 'XHR_ERROR_CONTENT':
@@ -349,8 +329,8 @@
                         console.log(action);
                     }
                 }
-                xhrError.open('DELETE', `${contentUrl}?id=undefined`);
-                Object.entries(headers).forEach(entry => xhrError.setRequestHeader(entry[0], entry[1]));
+                xhrError.open('DELETE', `${webApi.url(simpleUrl)}?id=undefined`);
+                Object.entries(webApi.headers('DELETE')).forEach(entry => xhrError.setRequestHeader(entry[0], entry[1]));
                 xhrError.send();
                 break;
         }
